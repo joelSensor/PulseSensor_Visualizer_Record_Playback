@@ -16,9 +16,11 @@ void folderSelected(File selection) {
 }
 
 void createFile(){
-   logFileName = "HRV_Breath Data/"+month()+"-"+day()+"_"+hour()+"-"+minute()+".csv";
+   logFileName = "PulseSensor Data/"+month()+"-"+day()+"_"+hour()+"-"+minute()+".csv";
    dataWriter = createWriter(logFileName);
-   dataWriter.println("%Pulse Sensor HRV + Breath Data Log " + month()+"/"+day()+" "+hour()+":"+minute());
+   dataWriter.println("%Pulse Sensor Data Log " + month()+"/"+day()+" "+hour()+":"+minute());
+   dataWriter.println("%Data formatted for playback in Processing Visualizer");
+   dataWriter.println("%https://github.com/biomurph/PulseSensor_Visualizer_Record-Playback");
 }
 
 
@@ -62,14 +64,14 @@ void readDataLineFromFile(){
         break;
 
      case 'B':
-       BPM = int(inData);                   // convert the string to usable int
-       beat = true;                         // set beat flag to advance heart rate graph
-       heart = 20;                          // begin heart image 'swell' timer
-       break;
+        BPM = int(readDataLine);             // convert the string to usable int
+        beat = true;                         // set beat flag to advance heart rate graph
+        heart = 20;                          // begin heart image 'swell' timer
+        break;
      case 'Q':         // leading 'Q' means IBI data packet
-        freshIBI = int(readDataLine);                   // convert ascii string to integer
+        freshIBI = int(readDataLine);        // convert ascii string to integer
         pulse = true;                        // set the pulse flag
-        // IBI[ibiWindowWidth-1][1] = 0;        // clear the peak detector
+        // IBI[ibiWindowWidth-1][1] = 0;     // clear the peak detector
         break;
      default:
        break;

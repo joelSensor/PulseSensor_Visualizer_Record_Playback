@@ -44,6 +44,23 @@ Radio[] button = new Radio[Serial.list().length*2];
 int numPorts = serialPorts.length;
 boolean refreshPorts = false;
 
+// FILE READ/WRITE STUFF
+PrintWriter dataWriter;
+boolean readingFromFile = false;
+boolean onAir = false;
+BufferedReader dataReader;
+String readDataLine;
+String writeDataLine;
+String convertedLine;
+String thisLine;
+String h;
+float[] floatData = new float[20];
+String[] hexNums;
+String logFileName;
+boolean writingToOpenFile = false;
+File playbackFile;
+
+
 void setup() {
   size(700, 600);  // Stage size
   frameRate(100);
@@ -52,28 +69,24 @@ void setup() {
   textAlign(CENTER);
   rectMode(CENTER);
   ellipseMode(CENTER);
-// Scrollbar constructor inputs: x,y,width,height,minVal,maxVal
+  background(0);
+  noStroke();
+  // DisposeHandler will save any data file when you close the program
+  dh = new DisposeHandler(this);
+
+  // Scrollbar constructor inputs: x,y,width,height,minVal,maxVal
   scaleBar = new Scrollbar (400, 575, 180, 12, 0.5, 1.0);  // set parameters for the scale bar
   RawY = new int[PulseWindowWidth];          // initialize raw pulse waveform array
   ScaledY = new int[PulseWindowWidth];       // initialize scaled pulse waveform array
   rate = new int [BPMWindowWidth];           // initialize BPM waveform array
   zoom = 0.75;                               // initialize scale of heartbeat window
 
-// set the visualizer lines to 0
- for (int i=0; i<rate.length; i++){
-    rate[i] = 555;      // Place BPM graph line at bottom of BPM Window
-   }
- for (int i=0; i<RawY.length; i++){
-    RawY[i] = height/2; // initialize the pulse window data line to V/2
- }
+  zeroDataLines();  // set the visualizer lines to 0
+  // DRAW OUT THE PULSE WINDOW AND BPM WINDOW RECTANGLES
+  drawDataWindows();
+  drawHeart();
 
- background(0);
- noStroke();
- // DRAW OUT THE PULSE WINDOW AND BPM WINDOW RECTANGLES
- drawDataWindows();
- drawHeart();
-
-// GO FIND THE ARDUINO
+  // GO FIND THE ARDUINO
   fill(eggshell);
   text("Select Your Serial Port",245,30);
   listAvailablePorts();
@@ -118,7 +131,7 @@ if(serialPortFound){
 
 }
 
-}  //end of draw loop
+}  // end of draw loop
 
 
 void drawDataWindows(){
@@ -202,11 +215,10 @@ void listAvailablePorts(){
     text(serialPorts[i],50, 100+(yPos*20));
     yPos++;
   }
-  int p = numPorts;
+  int p = numPorts; // adding one more radio button
    fill(233,0,0);
   button[p] = new Radio(35, 95+(yPos*20),12,color(180),color(80),color(255),p,button);
-    text("Refresh Serial Ports List",50, 100+(yPos*20));
-
+  text("Select Playback File",xPos+15, 100+(yPos*20));
   textFont(font);
   textAlign(CENTER);
 }
@@ -224,5 +236,14 @@ void autoScanPorts(){
     }
     refreshPorts = true;
     return;
+  }
+}
+
+void zeroDataLines(){
+  for (int i=0; i<rate.length; i++){
+   rate[i] = 555;      // Place BPM graph line at bottom of BPM Window
+  }
+  for (int i=0; i<RawY.length; i++){
+     RawY[i] = height/2; // initialize the pulse window data line to V/2
   }
 }

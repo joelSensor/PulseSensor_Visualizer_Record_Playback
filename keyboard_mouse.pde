@@ -23,9 +23,11 @@ void mousePressed(){
           text("Couldn't open port " + Serial.list()[i],60,70);
           textFont(font);
           textAlign(CENTER);
+        }
         }else{
           println("selected to read a file");
           selectInput("Select a folder to process:", "folderSelected");
+        }
       }
     }
   }
