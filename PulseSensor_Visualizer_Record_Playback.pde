@@ -39,8 +39,8 @@ boolean beat = false;    // set when a heart beat is detected, then cleared when
 // SERIAL PORT STUFF TO HELP YOU FIND THE CORRECT SERIAL PORT
 String serialPort;
 String[] serialPorts = new String[Serial.list().length];
-boolean serialPortFound = false;
-Radio[] button = new Radio[Serial.list().length*2];
+boolean dataSourceFound = false;
+Radio[] button = new Radio[Serial.list().length+1];
 int numPorts = serialPorts.length;
 boolean refreshPorts = false;
 
@@ -94,7 +94,7 @@ void setup() {
 }
 
 void draw() {
-if(serialPortFound){
+if(dataSourceFound){
   // ONLY RUN THE VISUALIZER AFTER THE PORT IS CONNECTED
   background(0);
   noStroke();
@@ -120,11 +120,11 @@ if(serialPortFound){
   if(refreshPorts){
     refreshPorts = false;
     drawDataWindows();
-    drawHeart();
+    // drawHeart();
     listAvailablePorts();
   }
 
-  for(int i=0; i<numPorts+1; i++){
+  for(int i=0; i<button.length; i++){
     button[i].overRadio(mouseX,mouseY);
     button[i].displayRadio();
   }
@@ -209,15 +209,15 @@ void listAvailablePorts(){
   textAlign(LEFT);
   // set a counter to list the ports backwards
   int yPos = 0;
-
-  for(int i=numPorts-1; i>=0; i--){
-    button[i] = new Radio(35, 95+(yPos*20),12,color(180),color(80),color(255),i,button);
-    text(serialPorts[i],50, 100+(yPos*20));
+  int xPos = 150;
+  for(int i=serialPorts.length-1; i>=0; i--){
+    button[i] = new Radio(xPos, 95+(yPos*20),12,color(180),color(80),color(255),i,button);
+    text(serialPorts[i],xPos+15, 100+(yPos*20));
     yPos++;
   }
-  int p = numPorts; // adding one more radio button
+  // int p = numPorts; // adding one more radio button
    fill(233,0,0);
-  button[p] = new Radio(35, 95+(yPos*20),12,color(180),color(80),color(255),p,button);
+  button[serialPorts.length] = new Radio(xPos, 95+(yPos*20),12,color(180),color(80),color(255),serialPorts.length,button);
   text("Select Playback File",xPos+15, 100+(yPos*20));
   textFont(font);
   textAlign(CENTER);

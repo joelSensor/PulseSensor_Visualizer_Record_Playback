@@ -28,7 +28,7 @@ try{
         IBI = int(inData);                   // convert the string to usable int
         break;
       default:
-        Serial.print("SerialEvent: token error got "); Serial.print(token);
+        print("SerialEvent: token error got "); println(token);
         break;
    }
 } catch(Exception e) {

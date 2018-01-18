@@ -7,7 +7,7 @@ class Radio {
   boolean over, pressed;
   int me;
   Radio[] radios;
-  
+
   Radio(int xp, int yp, int s, color b, color o, color p, int m, Radio[] r) {
     _x = xp;
     _y = yp;
@@ -19,11 +19,11 @@ class Radio {
     radios = r;
     me = m;
   }
-  
+
   boolean pressRadio(float mx, float my){
     if (dist(_x, _y, mx, my) < size/2){
-      pressed = true;
       for(int i=0; i<radios.length; i++){
+        radios[i].pressed = true;
         if(i != me){ radios[i].pressed = false; }
       }
       return true;
@@ -34,17 +34,16 @@ class Radio {
 
   boolean overRadio(float mx, float my){
     if (dist(_x, _y, mx, my) < size/2){
-      over = true;
       for(int i=0; i<radios.length; i++){
+        radios[i].over = true;
         if(i != me){ radios[i].over = false; }
       }
       return true;
     } else {
-//      over = false;
       return false;
     }
   }
-  
+
   void displayRadio(){
     noStroke();
     fill(baseColor);
@@ -59,7 +58,3 @@ class Radio {
     }
   }
 }
-    
-    
-    
-      

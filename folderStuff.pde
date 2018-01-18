@@ -53,14 +53,15 @@ void readDataLineFromFile(){
         println(readDataLine);
         break;
       case 'S':           // leading 'S' means Pulse Sensor and maybe breath data packet
+        Sensor = int(readDataLine);
         //println("i got " + token);
         // String[] s = splitTokens(readDataLine, ", ");
-        int newPPG = int(readDataLine); //int(s[0]);            // convert ascii string to integer
-        for (int i = 0; i < PPG.length-1; i++){
-          PPG[i] = PPG[i+1]; // move the Y coordinates of the pulse wave one pixel left
-        } // new data enters on the right at pulseY.length-1 scale and constrain incoming Pulse Sensor value to fit inside the pulse window
-        PPG[PPG.length-1] = int(map(newPPG,0,1023,(ppgWindowYcenter+ppgWindowHeight/2),(ppgWindowYcenter-ppgWindowHeight/2)));
-        // print("midline = " + ppgWindowYcenter + "\t");  println("ppg = " + PPG[PPG.length-1]);
+        // int newPPG = int(readDataLine); //int(s[0]);            // convert ascii string to integer
+        // for (int i = 0; i < PPG.length-1; i++){
+        //   PPG[i] = PPG[i+1]; // move the Y coordinates of the pulse wave one pixel left
+        // } // new data enters on the right at pulseY.length-1 scale and constrain incoming Pulse Sensor value to fit inside the pulse window
+        // PPG[PPG.length-1] = int(map(newPPG,0,1023,(ppgWindowYcenter+ppgWindowHeight/2),(ppgWindowYcenter-ppgWindowHeight/2)));
+        // // print("midline = " + ppgWindowYcenter + "\t");  println("ppg = " + PPG[PPG.length-1]);
         break;
 
      case 'B':
@@ -69,8 +70,7 @@ void readDataLineFromFile(){
         heart = 20;                          // begin heart image 'swell' timer
         break;
      case 'Q':         // leading 'Q' means IBI data packet
-        freshIBI = int(readDataLine);        // convert ascii string to integer
-        pulse = true;                        // set the pulse flag
+        IBI = int(readDataLine);        // convert ascii string to integer
         // IBI[ibiWindowWidth-1][1] = 0;     // clear the peak detector
         break;
      default:

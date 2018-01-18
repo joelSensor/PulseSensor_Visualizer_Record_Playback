@@ -14,16 +14,18 @@ void mousePressed(){
             dataSourceFound = true;
             createFile();
             writingToOpenFile = true;
-        }
-        catch(Exception e){
-          println("Couldn't open port " + Serial.list()[i]);
-          fill(255,0,0);
-          textFont(font,16);
-          textAlign(LEFT);
-          text("Couldn't open port " + Serial.list()[i],60,70);
-          textFont(font);
-          textAlign(CENTER);
-        }
+          }
+          catch(Exception e){
+            println("Couldn't open port " + Serial.list()[i]);
+            drawDataWindows();
+            listAvailablePorts();
+            fill(255,0,0);
+            textFont(font,16);
+            textAlign(LEFT);
+            text("Couldn't open port " + Serial.list()[i],60,70);
+            textFont(font);
+            textAlign(CENTER);
+          }
         }else{
           println("selected to read a file");
           selectInput("Select a folder to process:", "folderSelected");
@@ -43,13 +45,6 @@ void keyPressed(){
    case 's':    // pressing 's' or 'S' will take a jpg of the processing window
    case 'S':
      saveFrame("heartLight-####.jpg");    // take a shot of that!
-     break;
- // clear the IBI data array by pressing c key
-  case 'C':
-    for (int i=ibiWindowWidth-1; i>=0; i--){  // reset the data array to default value
-       IBI[i][0] = 1000;
-       // reset the breath traces too
-     }
      break;
    case 'p':  // user request to pause playback
      if(onAir){
