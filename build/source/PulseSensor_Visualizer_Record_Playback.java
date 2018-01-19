@@ -58,7 +58,7 @@ boolean beat = false;    // set when a heart beat is detected, then cleared when
 String serialPort;
 String[] serialPorts = new String[Serial.list().length];
 boolean dataSourceFound = false;
-Radio[] button = new Radio[Serial.list().length+1];
+Radio[] button = new Radio[Serial.list().length*2];
 int numPorts = serialPorts.length;
 boolean refreshPorts = false;
 
@@ -77,6 +77,8 @@ String[] hexNums;
 String logFileName;
 boolean writingToOpenFile = false;
 File playbackFile;
+int collumn = 0;
+int b = 0;
 
 
 public void setup() {
@@ -117,12 +119,17 @@ if(dataSourceFound){
   background(0);
   noStroke();
   drawDataWindows();
+  if(readingFromFile && onAir){
+    if(frameCount%3 == 0){
+      readDataLineFromFile();
+    }
+  }
   drawPulseWaveform();
   drawBPMwaveform();
   drawHeart();
 // PRINT THE DATA AND VARIABLE VALUES
   fill(eggshell);                                       // get ready to print text
-  text("Pulse Sensor Amped Visualizer v1.5",245,30);    // tell them what you are
+  text("Pulse Sensor Amped Visualizer v1.6.0",245,30);    // tell them what you are
   text("IBI " + IBI + "mS",600,585);                    // print the time between heartbeats in mS
   text(BPM + " BPM",600,200);                           // print the Beats Per Minute
   text("Pulse Window Scale " + nf(zoom,1,2), 150, 585); // show the current scale of Pulse Window
@@ -142,7 +149,7 @@ if(dataSourceFound){
     listAvailablePorts();
   }
 
-  for(int i=0; i<button.length; i++){
+  for(int i=0; i<numPorts+1; i++){
     button[i].overRadio(mouseX,mouseY);
     button[i].displayRadio();
   }
@@ -180,6 +187,7 @@ public void drawPulseWaveform(){
 }
 
 public void drawBPMwaveform(){
+
 // DRAW THE BPM WAVE FORM
 // first, shift the BPM waveform over to fit then next data point only when a beat is found
  if (beat == true){   // move the heart rate line over one pixel every time the heart beats
@@ -188,8 +196,9 @@ public void drawBPMwaveform(){
      rate[i] = rate[i+1];                  // shift the bpm Y coordinates over one pixel to the left
    }
 // then limit and scale the BPM value
-   BPM = min(BPM,200);                     // limit the highest BPM value to 200
-   float dummy = map(BPM,0,200,555,215);   // map it to the heart rate window Y
+   // BPM = min(BPM,200);                     // limit the highest BPM value to 200
+   BPM = constrain(BPM,0,200);
+   float dummy = map(BPM,0.0f,200.0f,555.0f,215.0f);   // map it to the heart rate window Y
    rate[rate.length-1] = PApplet.parseInt(dummy);       // set the rightmost pixel to the new data point value
  }
  // GRAPH THE HEART RATE WAVEFORM
@@ -233,9 +242,9 @@ public void listAvailablePorts(){
     text(serialPorts[i],xPos+15, 100+(yPos*20));
     yPos++;
   }
-  // int p = numPorts; // adding one more radio button
+  int p = numPorts; // adding one more radio button
    fill(233,0,0);
-  button[serialPorts.length] = new Radio(xPos, 95+(yPos*20),12,color(180),color(80),color(255),serialPorts.length,button);
+  button[p] = new Radio(xPos, 95+(yPos*20),12,color(180),color(80),color(255),p,button);
   text("Select Playback File",xPos+15, 100+(yPos*20));
   textFont(font);
   textAlign(CENTER);
@@ -305,11 +314,14 @@ public void folderSelected(File selection) {
 }
 
 public void createFile(){
-   logFileName = "PulseSensor Data/"+month()+"-"+day()+"_"+hour()+"-"+minute()+".csv";
+   logFileName = "PulseSensor Data/PS_"+month()+"-"+day()+"_"+hour()+"-"+minute()+".csv";
    dataWriter = createWriter(logFileName);
    dataWriter.println("%Pulse Sensor Data Log " + month()+"/"+day()+" "+hour()+":"+minute());
-   dataWriter.println("%Data formatted for playback in Processing Visualizer");
    dataWriter.println("%https://github.com/biomurph/PulseSensor_Visualizer_Record-Playback");
+   dataWriter.println("%Data formatted for playback in Processing Visualizer");
+   dataWriter.println("%Sample Rate 500Hz");
+   dataWriter.println("%comma separated values");
+   dataWriter.println("%Signal, BPM, IBI");
 }
 
 
@@ -330,60 +342,56 @@ public void readDataLineFromFile(){
     // readingFromFile = false;
     println("nothing left in file");
     onAir = false;
+    readingFromFile = false;
+    dataSourceFound = false;
+    refreshPorts = true;
+    zeroDataLines();
     //
   } else {
     //        println(dataLine);
-   char token = readDataLine.charAt(0);
-   readDataLine = readDataLine.substring(1);        // cut off the leading 'S' or other
+
    readDataLine = trim(readDataLine);               // trim the \n off the end
+   if(readDataLine.charAt(0) == '%'){
+     println(readDataLine);
+     return;
+   }
+   String[] s = splitTokens(readDataLine, ","); // inData, ", ");
+   // char token = readDataLine.charAt(0);
+   // readDataLine = readDataLine.substring(1);        // cut off the leading 'S' or other
+   Sensor = PApplet.parseInt(s[0]);
 
-    switch(token){
-      case '%':
-        println(readDataLine);
-        break;
-      case 'S':           // leading 'S' means Pulse Sensor and maybe breath data packet
-        Sensor = PApplet.parseInt(readDataLine);
-        //println("i got " + token);
-        // String[] s = splitTokens(readDataLine, ", ");
-        // int newPPG = int(readDataLine); //int(s[0]);            // convert ascii string to integer
-        // for (int i = 0; i < PPG.length-1; i++){
-        //   PPG[i] = PPG[i+1]; // move the Y coordinates of the pulse wave one pixel left
-        // } // new data enters on the right at pulseY.length-1 scale and constrain incoming Pulse Sensor value to fit inside the pulse window
-        // PPG[PPG.length-1] = int(map(newPPG,0,1023,(ppgWindowYcenter+ppgWindowHeight/2),(ppgWindowYcenter-ppgWindowHeight/2)));
-        // // print("midline = " + ppgWindowYcenter + "\t");  println("ppg = " + PPG[PPG.length-1]);
-        break;
-
-     case 'B':
-        BPM = PApplet.parseInt(readDataLine);             // convert the string to usable int
-        beat = true;                         // set beat flag to advance heart rate graph
-        heart = 20;                          // begin heart image 'swell' timer
-        break;
-     case 'Q':         // leading 'Q' means IBI data packet
-        IBI = PApplet.parseInt(readDataLine);        // convert ascii string to integer
-        // IBI[ibiWindowWidth-1][1] = 0;     // clear the peak detector
-        break;
-     default:
-       break;
-     }  // end of switch
+   int _bpm = PApplet.parseInt(s[1]);
+   if(BPM != _bpm){
+     BPM = _bpm;
+   }
+   if(IBI != PApplet.parseInt(s[2])){
+     IBI = PApplet.parseInt(s[2]);
+   }
+  int p = PApplet.parseInt(s[3]);
+  if(p == 1){
+    beat = true;          // set beat flag to advance heart rate graph
+    heart = 20;           // expand heart
   }
-
+ }
 }
 
 public void mousePressed(){
   scaleBar.press(mouseX, mouseY);
   if(!dataSourceFound){
-    for(int i=0; i<button.length; i++){
+    for(int i=0; i<=numPorts; i++){
       if(button[i].pressRadio(mouseX,mouseY)){
-        if(i < serialPorts.length){
+        if(i < numPorts){ // serialPorts.length){
           try{
             port = new Serial(this, Serial.list()[i], 115200);  // make sure Arduino is talking serial at this baud rate
-            delay(1000);
-            println(port.read());
+            // port.clear();
+            delay(500);
+            // println(port.read());
             port.clear();            // flush buffer
             port.bufferUntil('\n');  // set buffer full flag on receipt of carriage return
             dataSourceFound = true;
             createFile();
             writingToOpenFile = true;
+            // println("made port and file");
           }
           catch(Exception e){
             println("Couldn't open port " + Serial.list()[i]);
@@ -399,6 +407,7 @@ public void mousePressed(){
         }else{
           println("selected to read a file");
           selectInput("Select a folder to process:", "folderSelected");
+          frameRate(150);
         }
       }
     }
@@ -459,7 +468,7 @@ class Radio {
 
   public boolean pressRadio(float mx, float my){
     if (dist(_x, _y, mx, my) < size/2){
-      for(int i=0; i<radios.length; i++){
+      for(int i=0; i<numPorts+1; i++){
         radios[i].pressed = true;
         if(i != me){ radios[i].pressed = false; }
       }
@@ -471,7 +480,7 @@ class Radio {
 
   public boolean overRadio(float mx, float my){
     if (dist(_x, _y, mx, my) < size/2){
-      for(int i=0; i<radios.length; i++){
+      for(int i=0; i<numPorts+1; i++){
         radios[i].over = true;
         if(i != me){ radios[i].over = false; }
       }
@@ -585,39 +594,58 @@ class Scrollbar{
 
 public void serialEvent(Serial port){
 boolean saveLine = false;
+
 try{
    String inData = port.readStringUntil('\n');  // read the ascii data into a String
-   writeDataLine = inData;  // copy to file save buffer
    char token = inData.charAt(0);
    inData = inData.substring(1);        // cut off the leading char
    inData = trim(inData);                 // cut off white space (carriage return)
+   // writeDataLine += inData + ",";  // copy to file save buffer
 
     switch(token){
       case 'S':           // leading 'S' means Pulse Sensor data
+        Sensor = PApplet.parseInt(inData);                // convert the string to usable int
         //println("i got " + token);
-        saveLine = true;
-     	  Sensor = PApplet.parseInt(inData);                // convert the string to usable int
+        // collumn++;
+        // println(collumn);
+        // if (collumn > 3){
+        //   println("reset");
+          saveLine = true;
+        // writeDataLine += "\n";
+        //   collumn = 0;
+        // } else {
+        //   saveLine = false;
+        // }
 	      break;
       case 'B':          // leading 'B' for BPM data
-      	saveLine = true;
+      	// saveLine = true;
+        // collumn++;
+        // println(collumn);
      	  BPM = PApplet.parseInt(inData);                   // convert the string to usable int
      	  beat = true;                         // set beat flag to advance heart rate graph
 	      heart = 20;                          // begin heart image 'swell' timer
+        b = 1;
 	      break;
       case  'Q':            // leading 'Q' means IBI data
-        saveLine = true;
+        // collumn++;
+        // println(collumn);
+        // saveLine = true;
+        // writeDataLine += "\n";
         IBI = PApplet.parseInt(inData);                   // convert the string to usable int
         break;
       default:
         print("SerialEvent: token error got "); println(token);
         break;
-   }
+      }
 } catch(Exception e) {
   // println(e.toString());
 }
      if(saveLine){
+       // dataWriter.print("*");
+       writeDataLine = (Sensor +","+ BPM +","+ IBI +","+ b +"\n");
+       b = 0;
        dataWriter.print(writeDataLine);
-       print(writeDataLine);
+       // println(writeDataLine);
      }
 }// END OF SERIAL EVENT
   public void settings() {  size(700, 600); }

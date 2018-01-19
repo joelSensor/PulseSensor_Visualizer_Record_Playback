@@ -22,7 +22,7 @@ class Radio {
 
   boolean pressRadio(float mx, float my){
     if (dist(_x, _y, mx, my) < size/2){
-      for(int i=0; i<radios.length; i++){
+      for(int i=0; i<numPorts+1; i++){
         radios[i].pressed = true;
         if(i != me){ radios[i].pressed = false; }
       }
@@ -34,7 +34,7 @@ class Radio {
 
   boolean overRadio(float mx, float my){
     if (dist(_x, _y, mx, my) < size/2){
-      for(int i=0; i<radios.length; i++){
+      for(int i=0; i<numPorts+1; i++){
         radios[i].over = true;
         if(i != me){ radios[i].over = false; }
       }

@@ -16,11 +16,14 @@ void folderSelected(File selection) {
 }
 
 void createFile(){
-   logFileName = "PulseSensor Data/"+month()+"-"+day()+"_"+hour()+"-"+minute()+".csv";
+   logFileName = "PulseSensor Data/PS_"+month()+"-"+day()+"_"+hour()+"-"+minute()+".csv";
    dataWriter = createWriter(logFileName);
    dataWriter.println("%Pulse Sensor Data Log " + month()+"/"+day()+" "+hour()+":"+minute());
-   dataWriter.println("%Data formatted for playback in Processing Visualizer");
    dataWriter.println("%https://github.com/biomurph/PulseSensor_Visualizer_Record-Playback");
+   dataWriter.println("%Data formatted for playback in Processing Visualizer");
+   dataWriter.println("%Sample Rate 500Hz");
+   dataWriter.println("%comma separated values");
+   dataWriter.println("%Signal, BPM, IBI");
 }
 
 
@@ -41,41 +44,35 @@ void readDataLineFromFile(){
     // readingFromFile = false;
     println("nothing left in file");
     onAir = false;
+    readingFromFile = false;
+    dataSourceFound = false;
+    refreshPorts = true;
+    zeroDataLines();
     //
   } else {
     //        println(dataLine);
-   char token = readDataLine.charAt(0);
-   readDataLine = readDataLine.substring(1);        // cut off the leading 'S' or other
+
    readDataLine = trim(readDataLine);               // trim the \n off the end
+   if(readDataLine.charAt(0) == '%'){
+     println(readDataLine);
+     return;
+   }
+   String[] s = splitTokens(readDataLine, ","); // inData, ", ");
+   // char token = readDataLine.charAt(0);
+   // readDataLine = readDataLine.substring(1);        // cut off the leading 'S' or other
+   Sensor = int(s[0]);
 
-    switch(token){
-      case '%':
-        println(readDataLine);
-        break;
-      case 'S':           // leading 'S' means Pulse Sensor and maybe breath data packet
-        Sensor = int(readDataLine);
-        //println("i got " + token);
-        // String[] s = splitTokens(readDataLine, ", ");
-        // int newPPG = int(readDataLine); //int(s[0]);            // convert ascii string to integer
-        // for (int i = 0; i < PPG.length-1; i++){
-        //   PPG[i] = PPG[i+1]; // move the Y coordinates of the pulse wave one pixel left
-        // } // new data enters on the right at pulseY.length-1 scale and constrain incoming Pulse Sensor value to fit inside the pulse window
-        // PPG[PPG.length-1] = int(map(newPPG,0,1023,(ppgWindowYcenter+ppgWindowHeight/2),(ppgWindowYcenter-ppgWindowHeight/2)));
-        // // print("midline = " + ppgWindowYcenter + "\t");  println("ppg = " + PPG[PPG.length-1]);
-        break;
-
-     case 'B':
-        BPM = int(readDataLine);             // convert the string to usable int
-        beat = true;                         // set beat flag to advance heart rate graph
-        heart = 20;                          // begin heart image 'swell' timer
-        break;
-     case 'Q':         // leading 'Q' means IBI data packet
-        IBI = int(readDataLine);        // convert ascii string to integer
-        // IBI[ibiWindowWidth-1][1] = 0;     // clear the peak detector
-        break;
-     default:
-       break;
-     }  // end of switch
+   int _bpm = int(s[1]);
+   if(BPM != _bpm){
+     BPM = _bpm;
+   }
+   if(IBI != int(s[2])){
+     IBI = int(s[2]);
+   }
+  int p = int(s[3]);
+  if(p == 1){
+    beat = true;          // set beat flag to advance heart rate graph
+    heart = 20;           // expand heart
   }
-
+ }
 }
